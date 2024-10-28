@@ -3,17 +3,17 @@ import random
 import folium
 import subprocess
 from numpy import sin, cos, arccos, pi, round
+import tkinter as tk
+from tkinter import messagebox
 
+# Function definitions
 def rad2deg(radians):
-    """Convert radians to degrees."""
     return radians * 180 / pi
 
 def deg2rad(degrees):
-    """Convert degrees to radians."""
     return degrees * pi / 180
 
 def get_distance_between_points(lat1, lon1, lat2, lon2):
-    """Calculate the distance between two points given their latitude and longitude."""
     theta = lon1 - lon2
     distance = 60 * 1.1515 * rad2deg(
         arccos(
@@ -24,7 +24,6 @@ def get_distance_between_points(lat1, lon1, lat2, lon2):
     return round(distance * 1.609344, 2)
 
 def load_stations(filename):
-    """Load station data from a CSV file."""
     stations = {}
     with open(filename, newline='') as csvfile:
         rows = csv.reader(csvfile)
@@ -33,7 +32,6 @@ def load_stations(filename):
     return stations
 
 def find_next_stations_within_distance(stations, base_id, max_dist=40, min_dist=10):
-    """Find stations within a specific distance from the base station in one direction."""
     base_lat, base_lon = float(stations[base_id][6]), float(stations[base_id][7])
     return [
         (station_id, distance)
@@ -44,49 +42,29 @@ def find_next_stations_within_distance(stations, base_id, max_dist=40, min_dist=
     ]
 
 def generate_next_station_within_distance(stations, previous_id):
-    """Choose the next station within a specific distance from the previous station."""
     next_stations = find_next_stations_within_distance(stations, previous_id)
     if next_stations:
         random_station_id, distance = random.choice(next_stations)
-        print(f"Chosen station: {stations[random_station_id][2]} within {distance} km of {stations[previous_id][2]}")
-        return random_station_id
-    print("No stations found within the specified distance.")
-    return None
+        return random_station_id, stations[random_station_id][2], distance
+    return None, None, None
 
 def read_data(filename):
-    """Read an integer from a data file."""
     with open(filename, 'r') as f:
         return int(f.read())
 
-def get_station_name(stations, station_id):
-    """Get the station name by station number."""
-    return stations.get(station_id)[2]
+def save_data(filename, station_id):
+    with open(filename, 'w') as f:
+        f.write(str(station_id))
 
 def write_history(filename, station_id, name, stations):
-    """Append station visit history to a file."""
     with open(filename, 'a') as f:
         f.write(f"{station_id}, {name}, {float(stations[station_id][6])}, {float(stations[station_id][7])}, {stations[station_id][4]}\n")
 
 def read_history(filename):
-    """Read visit history from a file."""
     with open(filename, 'r') as f:
-        return [(line.split(', ')[0], line.split(', ')[1].strip()) for line in f]
-
-def save_data(filename, station_id):
-    """Save the new station number to data file."""
-    with open(filename, 'w') as f:
-        f.write(str(station_id))
-
-def init_data(filename):
-    """Initialize starting point to 台北站"""
-    save_data(filename, 33)
-
-def init_history(filename):
-    """Clear last history"""
-    open(filename, 'w').close()
+        return [line.split(', ')[1].strip() for line in f]
 
 def read_history_map(filename):
-    """Read visit history for mapping purposes."""
     with open(filename, 'r') as f:
         return [line.split(', ') for line in f]
 
@@ -100,42 +78,84 @@ def generate_map():
         folium.Marker(location=[float(line[2]), float(line[3])], popup=popup, 
                       icon=folium.Icon(icon='glyphicon-pushpin', color='darkblue', prefix='glyphicon')).add_to(map_)
     map_.save('history.html')
-    print("Saving map... Done!")
+    messagebox.showinfo("Map", "Map generated and saved as 'history.html'")
+    subprocess.call(['open', 'history.html'])
 
-def main():
-    stations = load_stations('railway_station/station.csv')
-    
-    while True:
-        previous_id = read_data('data.txt')
-        move = input("What do you want to do? (init/random/add/map/exit) ")
-        if move == 'init':
-            init_data('data.txt')
-            init_history('history.txt')
-            print("Initializing... Done!")
-        elif move in {'random', 'r'}:
-            new_station_id = generate_next_station_within_distance(stations, previous_id)
-            if new_station_id is not None:
-                name = get_station_name(stations, new_station_id)
-                print(f"Station ID: {new_station_id}, Name: {name}")
-                write_history('history.txt', new_station_id, name, stations)
-                save_data('data.txt', new_station_id)
-            else:
-                print("No new station chosen within the specified distance.")
-        elif move == 'add':
-            station_name = input("Where do you want to go? ")
-            for key, station in stations.items():
-                if f"{station_name}站" == station[2]:
-                    print(f"{key} {station[2]} added.")
-                    write_history('history.txt', key, station[2], stations)
-                    save_data('data.txt', key)
-        elif move == 'map':
-            generate_map()
-            subprocess.call(['open', 'history.html'])
-        elif move == 'exit':
-            print("Thank you, have a nice trip.")
-            break
-        else:
-            print('Invalid input. Please try again. (init/random/add/map/exit)')
+# GUI setup
+stations = load_stations('railway_station/station.csv')
 
-if __name__ == "__main__":
-    main()
+def initialize():
+    save_data('data.txt', 33)
+    open('history.txt', 'w').close()
+    update_current_station()
+    update_history_list()
+    messagebox.showinfo("Initialize", "Starting point set to 台北站, history cleared.")
+
+def random_station():
+    previous_id = read_data('data.txt')
+    new_station_id, name, distance = generate_next_station_within_distance(stations, previous_id)
+    if new_station_id is not None:
+        messagebox.showinfo("Random Station", f"Selected: {name} within {distance} km.")
+        write_history('history.txt', new_station_id, name, stations)
+        save_data('data.txt', new_station_id)
+        update_current_station()
+        update_history_list()
+    else:
+        messagebox.showinfo("Random Station", "No station found within the specified distance.")
+
+def add_station():
+    station_name = entry_station_name.get()
+    for key, station in stations.items():
+        if f"{station_name}站" == station[2]:
+            write_history('history.txt', key, station[2], stations)
+            save_data('data.txt', key)
+            update_current_station()
+            update_history_list()
+            messagebox.showinfo("Add Station", f"{station[2]} added.")
+            return
+    messagebox.showwarning("Add Station", "Station not found.")
+
+def update_current_station():
+    station_id = read_data('data.txt')
+    station_name = stations[station_id][2]
+    current_station_label.config(text=f"Current Station: {station_name}")
+
+def update_history_list():
+    history_list.delete(0, tk.END)
+    history = read_history('history.txt')
+    for station in history:
+        history_list.insert(tk.END, station)
+
+# Set up tkinter window
+root = tk.Tk()
+root.title("Railway Station Navigator")
+root.geometry("480x450")
+
+# Current Station Label
+current_station_label = tk.Label(root, text="Current Station: ")
+current_station_label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+
+# Buttons for Initializing and Random Station
+tk.Button(root, text="Initialize", command=initialize).grid(row=1, column=0, padx=10, pady=5, sticky="W")
+tk.Button(root, text="Random Station", command=random_station).grid(row=2, column=0, padx=10, pady=5, sticky="W")
+
+# Frame for adding a specific station
+frame_add_station = tk.Frame(root)
+frame_add_station.grid(row=3, column=1, columnspan=2, pady=5, sticky="W", padx=10)
+tk.Label(frame_add_station, text="Enter Station Name:").grid(row=0, column=0, sticky="W")
+entry_station_name = tk.Entry(frame_add_station)
+entry_station_name.grid(row=0, column=1, sticky="W")
+tk.Button(root, text="Add Station", command=add_station).grid(row=3, column=0, pady=5, sticky="W", padx=10)
+
+# Map Button
+tk.Button(root, text="Show Map", command=generate_map).grid(row=7, column=0, columnspan=2, pady=5, sticky="W", padx=10)
+
+# History Listbox with label
+tk.Label(root, text="Visit History:").grid(row=5, column=0, columnspan=2, pady=5, padx=10)
+history_list = tk.Listbox(root, height=10, width=50)
+history_list.grid(row=6, column=0, columnspan=2, pady=5, sticky="W", padx=10)
+
+# Start GUI
+update_current_station()
+update_history_list()
+root.mainloop()
