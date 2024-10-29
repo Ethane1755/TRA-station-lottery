@@ -77,7 +77,7 @@ def generate_map():
     for line in history:
         popup_html = f"<h1>{line[1]}</h1><h5>{line[4]}</h5><h5>{line[2]}°N, {line[3]}°E</h5>" \
                      f"<b><a href=https://google.com/maps/?q={line[2]},{line[3]} target=\"_blank\">Google Maps</a></b>"
-        popup = folium.Popup(folium.Html(popup_html, script=True), max_width=250)
+        popup = folium.Popup(folium.Html(popup_html, script=True), max_width=280)
         folium.Marker(location=[float(line[2]), float(line[3])], popup=popup, 
                       icon=folium.Icon(icon='glyphicon-pushpin', color='darkblue', prefix='glyphicon')).add_to(map_)
     map_.save('history.html')
@@ -89,7 +89,9 @@ stations = load_stations('railway_station/station.csv')
 
 def initialize():
     save_data('data.txt', 33)
-    open('history.txt', 'w').close()
+    open('history.txt','w').close()
+    with open('history.txt', 'a') as f:
+        f.write("100, 台北站, 25.0479239, 121.517081, 台北市中正區黎明里北平西路3號")
     update_current_station()
     update_history_list()
     messagebox.showinfo("Initialize", "Starting point set to 台北站, history cleared.")

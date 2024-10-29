@@ -82,9 +82,10 @@ def init_data(filename):
     save_data(filename, 33)
 
 def init_history(filename):
-    """Clear last history"""
-    open(filename, 'w').close()
-
+    """Initialize starting point to 台北站"""
+    with open(filename, 'a') as f:
+        f.write("100, 臺北站, 25.0479239, 121.517081, 臺北市中正區黎明里北平西路3號")
+        
 def read_history_map(filename):
     """Read visit history for mapping purposes."""
     with open(filename, 'r') as f:
