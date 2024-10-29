@@ -91,7 +91,7 @@ def initialize():
     save_data('data.txt', 33)
     open('history.txt','w').close()
     with open('history.txt', 'a') as f:
-        f.write("100, 台北站, 25.0479239, 121.517081, 台北市中正區黎明里北平西路3號")
+        f.write("100, 台北站, 25.0479239, 121.517081, 台北市中正區黎明里北平西路3號\n")
     update_current_station()
     update_history_list()
     messagebox.showinfo("Initialize", "Starting point set to 台北站, history cleared.")
