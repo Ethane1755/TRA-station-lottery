@@ -46,8 +46,10 @@ def find_next_stations_within_distance(stations, base_id, max_dist=40, min_dist=
 def generate_next_station_within_distance(stations, previous_id):
     next_stations = find_next_stations_within_distance(stations, previous_id)
     if next_stations:
-        random_station_id, distance = random.choice(next_stations)
-        return random_station_id, stations[random_station_id][2], distance
+        while True:
+                random_station_id, distance = random.choice(next_stations)
+                if abs(random_station_id - previous_id) <= 20:
+                    return random_station_id, stations[random_station_id][2], distance
     return None, None, None
 
 def read_data(filename):
@@ -74,7 +76,7 @@ def generate_map():
     map_ = folium.Map(location=(23.58, 120.58), zoom_start=8)
     history = read_history_map('history.txt')
     for line in history:
-        popup_html = f"<h1>{line[1]}</h1><h5>{line[4]}</h5><h5>{line[2]}°N, {line[3]}°E</h5>" \
+        popup_html = f"<h1>{history.index(line)}. {line[1]}</h1><h5>{line[4]}</h5><h5>{line[2]}°N, {line[3]}°E</h5>" \
                      f"<b><a href=https://google.com/maps/?q={line[2]},{line[3]} target=\"_blank\">Google Maps</a></b>"
         popup = folium.Popup(folium.Html(popup_html, script=True), max_width=280)
         folium.Marker(location=[float(line[2]), float(line[3])], popup=popup, 
@@ -87,7 +89,7 @@ def generate_map():
 stations = load_stations('railway_station/station.csv')
 
 def initialize():
-    save_data('data.txt', 33)
+    save_data('data.txt', 0)
     open('history.txt','w').close()
     with open('history.txt', 'a') as f:
         f.write("100, 台北站, 25.0479239, 121.517081, 台北市中正區黎明里北平西路3號\n")
@@ -105,7 +107,7 @@ def random_station():
         update_current_station()
         update_history_list()
     else:
-        messagebox.showinfo("Random Station", "No station found within the specified distance.")
+        messagebox.showinfo("Random Station", "No station found within the specified distance.\n Thank u for the trip!")
 
 def add_station():
     station_name = entry_station_name.get()
@@ -115,7 +117,6 @@ def add_station():
             save_data('data.txt', key)
             update_current_station()
             update_history_list()
-            #messagebox.showinfo("Add Station", f"{station[2]} added.")
             return
     messagebox.showwarning("Add Station", "Station not found.")
 
@@ -135,8 +136,8 @@ def callback(url):
 
 # Set up tkinter window
 root = tk.Tk()
-root.title("TRA lottery")
-root.geometry("473x600")
+root.title("TRA Lottery")
+root.geometry("480x600")
 root.minsize(480, 600)
 root.resizable(True, True)  # Enable window resizing 
 
