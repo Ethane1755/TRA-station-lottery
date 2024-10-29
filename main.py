@@ -8,7 +8,6 @@ from tkinter import messagebox
 import tkinter.font as tkFont
 import webbrowser
 
-
 # Function definitions
 def rad2deg(radians):
     return radians * 180 / pi
@@ -157,7 +156,7 @@ Initialize_label = tk.Label(root, text="Set the starting station to Taipei")
 Initialize_label.grid(row=1, column=1, columnspan=2, pady=10, padx=10, sticky="e")
 Random_label = tk.Label(root, text="Pick random station in range 10 ~ 40 km")
 Random_label.grid(row=2, column=1, columnspan=2, pady=10, padx=10, sticky="e")
-
+    
 # Frame for adding a specific station
 frame_add_station = tk.Frame(root)
 frame_add_station.grid(row=3, column=0, columnspan=2, pady=5, sticky="ew", padx=10)
@@ -165,10 +164,19 @@ tk.Label(frame_add_station, text="Enter Station Name:").grid(row=0, column=0, pa
 entry_station_name = tk.Entry(frame_add_station)
 entry_station_name.grid(row=0, column=1, pady=5, sticky="ew")
 frame_add_station.grid_columnconfigure(1, weight=1)  # Make the entry widget expand
-
 tk.Button(root, text="Add Station", command=add_station).grid(row=4, column=0, pady=5, sticky="w", padx=10)
 Add_label = tk.Label(root, text="Add station above, does not have to include '站'")
 Add_label.grid(row=4, column=1, columnspan=2, pady=5, padx=10, sticky="e")
+
+# History Listbox with label
+tk.Label(root, text="Visit History:").grid(row=5, column=0, columnspan=2, pady=10, padx=10)
+history_list = tk.Listbox(root, height=10, width=50)
+history_list.grid(row=6, column=0, columnspan=2, pady=5, sticky="nsew", padx=10)
+
+# Make the listbox row and column resizable
+root.grid_rowconfigure(6, weight=1)
+root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(1, weight=1)
 
 # Map Button
 tk.Button(root, text="Show Map", command=generate_map).grid(row=7, column=0, columnspan=2, pady=5, sticky="e", padx=10)
@@ -182,16 +190,6 @@ f.configure(underline = True)
 link1.configure(font=f)
 link1.bind("<Button-1>", lambda e: callback("https://github.com/Ethane1755/TRA-station-lottery"))
 link1.grid(row=8, column=1, pady=0, padx=10, columnspan=2,sticky="W")
-
-# History Listbox with label
-tk.Label(root, text="Visit History:").grid(row=5, column=0, columnspan=2, pady=10, padx=10)
-history_list = tk.Listbox(root, height=10, width=50)
-history_list.grid(row=6, column=0, columnspan=2, pady=5, sticky="nsew", padx=10)
-
-# Make the listbox row and column resizable
-root.grid_rowconfigure(6, weight=1)
-root.grid_columnconfigure(0, weight=1)
-root.grid_columnconfigure(1, weight=1)
 
 # Start GUI
 update_current_station()
