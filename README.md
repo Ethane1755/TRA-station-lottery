@@ -4,4 +4,4 @@ This is a repository storing the code for lottery of TRA stations around Taiwan.
 
 Usage: run main.py.
 
-Pins: 臺中、台南、高雄、台東、花蓮、宜蘭
+Pins: 台南、高雄、台東、花蓮、宜蘭
